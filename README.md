@@ -1,28 +1,28 @@
 # Smart Chef
 
----
-
-Smart Chef is more than an app; it's a movement towards smarter, more sustainable cooking. Join us in reshaping the way the world prepares and enjoys food.
+Smart Chef turns a photo of your fridge into ready-to-cook meal ideas. Add what's on hand - either by uploading a photo or typing it in - and Smart Chef ranks recipes by how many of your ingredients they use, always surfacing at least one recipe you can make right now when one exists.
 
 ## Features
 
-- Description: Automatically identify and categorize ingredients from a photo of the fridge.
-- User Story: As a user, I want to take a picture of my fridge contents so that I can receive meal suggestions without manually inputting ingredients.
-- Acceptance Criteria:
-- Priority: P0
+- **Ingredient recognition** - upload a fridge photo and Smart Chef proposes a starting ingredient list (see [Mock ingredient recognition](#mock-ingredient-recognition) below).
+- **Manual ingredient management** - add, edit, and remove ingredients with quantities and units.
+- **Meal suggestions** - 2-3 ranked recipe matches with a match percentage and missing-ingredient callouts.
+- **Dietary filters** - vegetarian, vegan, gluten-free, dairy-free, and nut-free.
+- **Servings adjustment** - scale any recipe's ingredient list up or down.
 
 ## Tech Stack
 
-- **Framework**: Next.js
+- **Framework**: Next.js 14 (App Router) + TypeScript
+- **Database**: libSQL (Turso-compatible), local file-based for development
+- **ORM**: Drizzle ORM
+- **Styling**: Tailwind CSS with shadcn/ui-style primitives
+- **Tests**: Vitest
 
 ## Quick Start
 
 ### Prerequisites
 
 - Node.js 18+
-- npm or yarn
-- [Claude Code CLI](https://claude.ai/claude-code) (for Ralph autonomous development)
-- [GitHub CLI](https://cli.github.com/) (for Ralph issue integration)
 
 ### Installation
 
@@ -32,68 +32,43 @@ cd smart-chef
 npm install
 ```
 
+### Database setup
+
+No account or credentials are required. Smart Chef defaults to a local libSQL file (`local.db` in the project root) unless you set `DATABASE_URL` / `DATABASE_AUTH_TOKEN` to point at a hosted Turso database instead (see `.env.example`).
+
+```bash
+npm run db:push   # creates local.db and applies the schema
+npm run db:seed   # loads the starter recipe catalog
+```
+
 ### Development
 
 ```bash
 npm run dev
 ```
 
-### Build
+Visit http://localhost:3000.
+
+### Tests
 
 ```bash
-npm run build
+npm test
 ```
 
-## Getting Started with Ralph 🤖
+## Mock ingredient recognition
 
-This project includes **Ralph**, an autonomous AI development loop that implements features from GitHub issues.
+There's no third-party vision API wired up, so the app runs entirely offline with no external credentials. `lib/ingredients/recognize.ts` exposes a single `recognizeIngredients(image)` function that currently returns a deterministic mock ingredient list. Swap its implementation for a real provider (Google Cloud Vision, AWS Rekognition, etc.) later without touching any of its callers. Regardless of what recognition returns, users can always add, edit, or remove ingredients by hand.
 
-### Workflow
+## Project Structure
 
-1. **Choose an issue** from the [project board](../../projects)
-2. **Generate Ralph files**: `/ralphify <issue-number>`
-3. **Run the loop**: `.ralph/ralph.sh 20`
-4. **Clean up when done**: `/ralph-cleanup`
-
-### Commands
-
-| Command | Description |
-|---------|-------------|
-| `/ralphify #123` | Generate `.ralph/` files for issue #123 |
-| `.ralph/ralph.sh 20` | Run Ralph loop (max 20 iterations) |
-| `/ralph-cleanup` | Archive files and close the GitHub issue |
-| `/ralph-cleanup --force` | Archive even if tasks incomplete |
-| `/ralph-cleanup --no-close` | Archive but don't close issue |
-
-### Example Session
-
-```bash
-# 1. Pick an issue and generate Ralph files
-claude
-> /ralphify 42
-
-# 2. Run the autonomous loop
-.ralph/ralph.sh 20
-
-# 3. Archive and close the issue
-claude
-> /ralph-cleanup
-```
-
-### How Ralph Works
-
-Ralph reads the generated `.ralph/plan.md` file which contains a JSON task list derived from the GitHub issue. Each iteration:
-
-1. Reads the plan to find an incomplete task
-2. Implements the task completely
-3. Updates `plan.md` (marks task as passed)
-4. Logs progress to `activity.md`
-5. Verifies with build/tests
-6. Continues until all tasks pass or max iterations reached
-
-When complete, `/ralph-cleanup` archives the session to `.ralph/archive/issue-<number>/` and closes the GitHub issue.
-
-See `.claude/commands/` for full command documentation.
+- `app/` - routes, pages, and API route handlers (App Router)
+- `components/` - UI components (`components/ui/` holds shared primitives)
+- `lib/db/` - Drizzle schema and libSQL client
+- `lib/ingredients/` - ingredient recognition
+- `lib/mealSuggestions/` - the recipe matching algorithm
+- `lib/recipes/` - seed recipe data and dietary tag definitions
+- `lib/utils/` - shared helpers (servings scaling, class name merging)
+- `scripts/seed.ts` - populates the local database with starter recipes
 
 ## Documentation
 
